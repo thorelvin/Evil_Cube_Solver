@@ -236,6 +236,19 @@ python .\count_ultra_cube_dlx.py --progress-every 1000 --heartbeat-seconds 60
 python .\count_ultra_cube_solutions.py --progress-every 1 --heartbeat-seconds 60
 ```
 
+The raw Ultra counter completed quickly in a verification run:
+
+```text
+inventory=ZRLLLLLLLLLLL
+raw_fixed_cube_solutions=24
+unique_up_to_cube_rotation=1
+cube_rotations=24
+```
+
+Interpretation: the Ultra Cube has one physical solution up to cube rotation.
+The `24` raw fixed-cube solutions are the 24 rotations of that same assembly.
+This matches the designer's note that Ultra appears to have only one solution.
+
 One Ultra Cube solution is saved in `ultra_cube_solution.txt`:
 
 ```text
@@ -380,6 +393,17 @@ eleven identical `L` pieces:
 That makes `count_ultra_cube_dlx.py` useful as a fast exact-cover traversal
 diagnostic, but `count_ultra_cube_solutions.py` is the script to use when you
 want physical Ultra Cube solution counts.
+
+The completed raw Ultra run found:
+
+```text
+raw_fixed_cube_solutions=24
+unique_up_to_cube_rotation=1
+```
+
+So Ultra is the clean contrast to Evil Cube: it is much harder physically, but
+the solver confirms that all fixed-cube solutions are just rotations of one
+underlying physical assembly.
 
 ### Raw Counter
 
