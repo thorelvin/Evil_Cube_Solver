@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-178.0 -84.0 242.0 220.0" role="img" aria-labelledby="title desc">
+  <title id="title">Evil Cube R piece</title>
+  <desc id="desc">Isometric rendering of the R brick made from 4 unit cubes.</desc>
+  <rect x="-178.0" y="-84.0" width="242.0" height="220.0" rx="8" fill="#fafafa" />
+  <text x="-172.0" y="-60.0" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#1f1f1f">R piece</text>
+  <polygon points="0.0,-42.0 38.0,-20.0 0.0,2.0 -38.0,-20.0" fill="#f5d679" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="38.0,22.0 0.0,44.0 0.0,2.0 38.0,-20.0" fill="#f2c94c" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="-38.0,-20.0 0.0,2.0 -38.0,24.0 -76.0,2.0" fill="#f5d679" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="0.0,44.0 -38.0,66.0 -38.0,24.0 0.0,2.0" fill="#f2c94c" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="-76.0,2.0 -38.0,24.0 -76.0,46.0 -114.0,24.0" fill="#f5d679" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="-38.0,66.0 -76.0,88.0 -76.0,46.0 -38.0,24.0" fill="#f2c94c" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="-114.0,24.0 -76.0,46.0 -114.0,68.0 -152.0,46.0" fill="#f5d679" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="-76.0,88.0 -114.0,110.0 -114.0,68.0 -76.0,46.0" fill="#f2c94c" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="-152.0,88.0 -114.0,110.0 -114.0,68.0 -152.0,46.0" fill="#c6a53e" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+</svg>

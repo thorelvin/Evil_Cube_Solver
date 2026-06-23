@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-64.0 -104.0 204.0 240.0" role="img" aria-labelledby="title desc">
+  <title id="title">Evil Cube A piece</title>
+  <desc id="desc">Isometric rendering of the A brick made from 6 unit cubes.</desc>
+  <rect x="-64.0" y="-104.0" width="204.0" height="240.0" rx="8" fill="#fafafa" />
+  <text x="-58.0" y="-80.0" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#1f1f1f">A piece</text>
+  <polygon points="0.0,-42.0 38.0,-20.0 0.0,2.0 -38.0,-20.0" fill="#63a0f2" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="-38.0,22.0 0.0,44.0 0.0,2.0 -38.0,-20.0" fill="#2769c2" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="38.0,-62.0 76.0,-40.0 38.0,-18.0 0.0,-40.0" fill="#63a0f2" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="76.0,2.0 38.0,24.0 38.0,-18.0 76.0,-40.0" fill="#2f80ed" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="0.0,2.0 38.0,24.0 38.0,-18.0 0.0,-40.0" fill="#2769c2" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="0.0,2.0 38.0,24.0 0.0,46.0 -38.0,24.0" fill="#63a0f2" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="-38.0,66.0 0.0,88.0 0.0,46.0 -38.0,24.0" fill="#2769c2" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="76.0,2.0 114.0,24.0 76.0,46.0 38.0,24.0" fill="#63a0f2" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="114.0,66.0 76.0,88.0 76.0,46.0 114.0,24.0" fill="#2f80ed" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="38.0,24.0 76.0,46.0 38.0,68.0 0.0,46.0" fill="#63a0f2" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="76.0,88.0 38.0,110.0 38.0,68.0 76.0,46.0" fill="#2f80ed" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+  <polygon points="0.0,88.0 38.0,110.0 38.0,68.0 0.0,46.0" fill="#2769c2" stroke="#242424" stroke-width="1.4" stroke-linejoin="round" />
+</svg>

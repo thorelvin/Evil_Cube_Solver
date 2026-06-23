@@ -24,6 +24,9 @@ The useful project files are:
 - `count_evil_cube_dlx.py` - fast labelled exact-cover counter using Algorithm X.
 - `count_evil_cube_solutions.py` - raw physical-solution counter that collapses
   identical pieces during search.
+- `render_piece_svgs.py` - regenerates the isometric piece-identification
+  images from the embedded shape data.
+- `assets/pieces/*.svg` - isometric images of the six brick types.
 - `evil_cube_solution.txt` - one valid layer-by-layer solution.
 - `REPORT.md` - notes from the exploratory counting runs.
 
@@ -32,9 +35,76 @@ in this repository. They belong to the Printables model page and can be
 downloaded there. The code stores only the derived unit-cube brick definitions
 needed to solve the puzzle.
 
+## Python Setup
+
+Use Python 3.10 or newer. The scripts were verified with Python 3.10.6. Python
+3.10 matters because the code uses modern type-hint syntax such as
+`str | None`.
+
+There are no third-party dependencies. You do not need `pip install` for the
+solver, counters, or SVG renderer.
+
+### Windows / PowerShell
+
+Check whether Python is already available:
+
+```powershell
+py --version
+python --version
+```
+
+Either command is fine. If one reports Python 3.10 or newer, use that command
+for the rest of the README. On many Windows installs, `py` is the most reliable
+launcher.
+
+If Python is missing or too old:
+
+1. Install Python 3.10 or newer from https://www.python.org/downloads/.
+2. During install, enable "Add python.exe to PATH".
+3. Open a new PowerShell window.
+4. Run `py --version` or `python --version` again.
+
+An optional virtual environment keeps the project isolated:
+
+```powershell
+py -3.10 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python --version
+```
+
+If PowerShell blocks activation, you can skip activation and call the venv
+Python directly:
+
+```powershell
+.\.venv\Scripts\python.exe .\solve_evil_cube.py
+```
+
+### macOS / Linux
+
+Check the version:
+
+```bash
+python3 --version
+```
+
+If it is Python 3.10 or newer, run scripts with `python3`:
+
+```bash
+python3 solve_evil_cube.py
+```
+
+Optional virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python --version
+```
+
 ## Quick Start
 
-Use Python 3.10 or newer. The scripts use only the Python standard library.
+The examples below use `python`. If your setup uses the Windows launcher, replace
+`python` with `py`. On macOS/Linux, use `python3` if `python` is not available.
 
 Find one solution:
 
@@ -113,6 +183,27 @@ L: 5 cubes
 R: 4 cubes
 S: 5 cubes
 Z: 5 cubes
+```
+
+### Piece Identification
+
+These isometric SVGs are generated from the exact embedded coordinates in
+`solve_evil_cube.py`. They are meant as a quick visual guide when matching the
+printed solution labels to the physical pieces.
+
+| Piece | Image | Volume | Count in regular Evil Cube |
+| --- | --- | ---: | ---: |
+| `A` | <img src="assets/pieces/A.svg" alt="A piece" width="180"> | 6 | 2 |
+| `B` | <img src="assets/pieces/B.svg" alt="B piece" width="180"> | 6 | 3 |
+| `L` | <img src="assets/pieces/L.svg" alt="L piece" width="180"> | 5 | 1 |
+| `R` | <img src="assets/pieces/R.svg" alt="R piece" width="180"> | 4 | 1 |
+| `S` | <img src="assets/pieces/S.svg" alt="S piece" width="180"> | 5 | 4 |
+| `Z` | <img src="assets/pieces/Z.svg" alt="Z piece" width="180"> | 5 | 1 |
+
+Regenerate the images after changing any shape coordinates:
+
+```powershell
+python .\render_piece_svgs.py
 ```
 
 The total inventory volume is:
