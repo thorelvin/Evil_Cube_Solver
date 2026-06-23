@@ -418,6 +418,18 @@ The division by 24 is valid for completed counts when no solved cube has a
 nontrivial rotational symmetry. For this irregular inventory, that is the
 expected case, but completed counting is still the stronger evidence.
 
+The completed raw Evil Cube run found:
+
+```text
+inventory=ZSSSSRLAABBB
+raw_fixed_cube_solutions=3264
+unique_up_to_cube_rotation=136
+cube_rotations=24
+```
+
+So the regular Evil Cube has 136 physical solutions up to cube rotation under
+this solver's counting convention.
+
 ## Progress Reporting
 
 Both counters support progressive reporting:
@@ -434,7 +446,7 @@ Useful options:
 - `--progress-file PATH` appends the same messages to a text file.
 - Use `--progress-file ""` to disable progress-file output.
 
-Example heartbeat:
+Example labelled DLX heartbeat:
 
 ```text
 heartbeat labelled_solutions=20172 nodes=16601797 depth=8 active_columns=26 elapsed_seconds=2940.0
@@ -444,10 +456,29 @@ That means the labelled DLX traversal had found 20,172 labelled completions,
 visited 16,601,797 search nodes, and had run for 2,940 seconds when the line was
 written.
 
-## Notes About The Designer's 120 Solutions
+Example raw-counter heartbeat:
 
-The model page/designer references 120 solutions for the regular Evil Cube.
-That number is not directly comparable to a partial labelled DLX count.
+```text
+heartbeat raw_fixed_cube_solutions_counted=17 terminal_solutions_seen=1 root_branches=10/21 nodes=211952 occupied_cells=30 elapsed_seconds=20.0
+```
+
+The raw counter uses memoization. Because cached subtrees can contribute many
+solutions without revisiting every terminal leaf, progress output separates two
+ideas:
+
+- `raw_fixed_cube_solutions_counted`: exact solutions counted from fully
+  completed root branches so far
+- `terminal_solutions_seen`: terminal leaves reached directly before cache
+  reuse; this is a search diagnostic, not the solution total
+
+The final `raw_fixed_cube_solutions=...` line is the completed exact count.
+
+## Notes About Published Solution Counts
+
+Different places may quote different Evil Cube solution totals. Older notes or
+comments may mention about 120 solutions, while the downloaded Printables page
+text for this project said there are at least 133 solutions. This solver's
+completed raw count found 136 unique physical solutions up to cube rotation.
 
 Possible counting conventions include:
 
@@ -456,14 +487,10 @@ Possible counting conventions include:
 - unique solutions up to cube rotation
 - unique solutions up to cube rotation plus other presentation conventions
 
-The partial DLX run in this repository found more than 20,000 labelled
-completions before it was stopped. That does not contradict a smaller published
-physical count, because labelled completions include duplicate assignments of
-identical pieces and the traversal was not complete.
-
-The right comparison target is a completed physical count from
-`count_evil_cube_solutions.py`, or a completed labelled count divided by the
-duplicate factor after the whole labelled traversal finishes.
+The completed raw counter is the comparison target for physical solutions. The
+DLX counter is still useful, but labelled completions include duplicate
+assignments of identical pieces and should not be compared directly with
+published physical counts.
 
 ## Files Produced By Long Runs
 
@@ -479,6 +506,8 @@ Ad hoc long runs may use custom names such as:
 ```text
 evil_cube_dlx_10min_progress.txt
 evil_cube_dlx_1hour_progress.txt
+evil_cube_raw_2hour_progress.txt
+ultra_cube_raw_1hour_progress.txt
 ```
 
 These files are intentionally ignored by Git because they are run artifacts, not

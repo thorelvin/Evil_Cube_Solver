@@ -157,7 +157,11 @@ def count_raw_solutions(
     initial_counts = tuple(Counter(inventory)[shape] for shape in shape_order)
     shape_index = {shape: index for index, shape in enumerate(shape_order)}
     shape_volumes = tuple(len(SHAPES[shape]) for shape in shape_order)
-    progress_count = 0
+    terminal_solutions_seen = 0
+    counted_solutions = 0
+    last_reported_counted_solutions = 0
+    root_branches_done = 0
+    root_branch_total: int | None = None
     nodes = 0
     started = monotonic()
     last_heartbeat = started
@@ -168,11 +172,27 @@ def count_raw_solutions(
         progress_file,
     )
 
-    def report_solution_count() -> None:
-        if progress_every and progress_count % progress_every == 0:
+    def report_counted_solutions(branch_total: int) -> None:
+        nonlocal last_reported_counted_solutions
+        if progress_every and counted_solutions - last_reported_counted_solutions >= progress_every:
             elapsed = monotonic() - started
             progress_print(
-                f"progress raw_fixed_cube_solutions={progress_count} "
+                f"progress raw_fixed_cube_solutions_counted={counted_solutions} "
+                f"last_branch_solutions={branch_total} "
+                f"root_branches={root_branches_done}/{root_branch_total} "
+                f"terminal_solutions_seen={terminal_solutions_seen} "
+                f"nodes={nodes} elapsed_seconds={elapsed:.1f}",
+                progress_file,
+            )
+            last_reported_counted_solutions = counted_solutions
+
+    def report_terminal_solution() -> None:
+        if progress_every and terminal_solutions_seen % progress_every == 0:
+            elapsed = monotonic() - started
+            progress_print(
+                f"progress terminal_solutions_seen={terminal_solutions_seen} "
+                f"raw_fixed_cube_solutions_counted={counted_solutions} "
+                f"root_branches={root_branches_done}/{root_branch_total} "
                 f"nodes={nodes} elapsed_seconds={elapsed:.1f}",
                 progress_file,
             )
@@ -209,20 +229,23 @@ def count_raw_solutions(
 
     @lru_cache(maxsize=None)
     def search(occupied: int, counts: tuple[int, ...]) -> int:
-        nonlocal progress_count, nodes, last_heartbeat
+        nonlocal terminal_solutions_seen, counted_solutions, root_branches_done
+        nonlocal root_branch_total, nodes, last_heartbeat
         nodes += 1
         now = monotonic()
         if heartbeat_seconds and now - last_heartbeat >= heartbeat_seconds:
             progress_print(
-                f"heartbeat raw_fixed_cube_solutions={progress_count} "
+                f"heartbeat raw_fixed_cube_solutions_counted={counted_solutions} "
+                f"terminal_solutions_seen={terminal_solutions_seen} "
+                f"root_branches={root_branches_done}/{root_branch_total} "
                 f"nodes={nodes} occupied_cells={occupied.bit_count()} "
                 f"elapsed_seconds={now - started:.1f}",
                 progress_file,
             )
             last_heartbeat = now
         if occupied == ALL_MASK:
-            progress_count += 1
-            report_solution_count()
+            terminal_solutions_seen += 1
+            report_terminal_solution()
             return 1
 
         empty_mask = ALL_MASK ^ occupied
@@ -251,6 +274,8 @@ def count_raw_solutions(
         assert best_options is not None
         total = 0
         best_options.sort(key=lambda index: (placements[index].shape, placements[index].mask))
+        if occupied == 0:
+            root_branch_total = len(best_options)
         for index in best_options:
             placement = placements[index]
             count_index = shape_index[placement.shape]
@@ -258,7 +283,12 @@ def count_raw_solutions(
                 continue
             next_counts = list(counts)
             next_counts[count_index] -= 1
-            total += search(occupied | placement.mask, tuple(next_counts))
+            branch_total = search(occupied | placement.mask, tuple(next_counts))
+            total += branch_total
+            if occupied == 0:
+                root_branches_done += 1
+                counted_solutions += branch_total
+                report_counted_solutions(branch_total)
         return total
 
     return search(0, initial_counts)
