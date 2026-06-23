@@ -7,6 +7,10 @@ animation for the
 [Printables Evil Cube puzzle](https://www.printables.com/model/1339793-evil-cube).
 It also includes the Ultra Cube variant from the same model page.
 
+The GIF above is a compact preview. For the adjustable animation with
+Pause/Restart/Finish, speed control, and an Evil/Ultra selector, open
+`animations/evil_cube_solution.html` in a browser.
+
 The puzzles are modelled as 4x4x4 exact-cover polycube problems. The code stores
 only the derived unit-cube brick definitions needed for solving and counting;
 it does not redistribute the original 3D model files.
@@ -49,8 +53,8 @@ Main project files:
 - `assets/pieces/*.svg` - isometric images of the six brick types.
 - `assets/animations/evil_cube_solution.gif` - compact README preview of the
   solution animation.
-- `animations/evil_cube_solution.html` - browser animation that assembles the
-  Evil Cube solution one piece at a time.
+- `animations/evil_cube_solution.html` - adjustable browser animation that
+  assembles the Evil or Ultra solution one piece at a time.
 - `evil_cube_solution.txt` - one valid layer-by-layer solution.
 - `ultra_cube_solution.txt` - one valid layer-by-layer Ultra Cube solution.
 - `REPORT.md` - notes from the exploratory counting runs.
@@ -163,7 +167,7 @@ Print the embedded shape definitions:
 python .\solve_evil_cube.py --show-shapes
 ```
 
-Open the browser animation:
+Open the adjustable browser animation:
 
 ```powershell
 Start-Process .\animations\evil_cube_solution.html
@@ -231,9 +235,11 @@ Piece labels identify a specific copy of a brick type. For example, `S1` to
 
 ## Solution Animation
 
-Open `animations/evil_cube_solution.html` in a browser to watch the regular
-Evil Cube assemble itself one piece at a time. The animation is standalone:
-there is no build step, no Python server, and no internet connection required.
+Open `animations/evil_cube_solution.html` in a browser to watch either saved
+solution assemble itself one piece at a time. Use the Evil/Ultra selector to
+switch between the regular Evil Cube and the Ultra Cube. The animation is
+standalone: there is no build step, no Python server, and no internet connection
+required.
 
 The animation follows the physical layer convention used in the solution text:
 `z=3` is the bottom layer and `z=0` is the top layer. Pieces are ordered by the
@@ -244,6 +250,7 @@ incoming piece passing through pieces that are already in place.
 
 Controls:
 
+- `Evil Cube` / `Ultra Cube` switches the displayed solution.
 - `Pause` / `Play` stops or resumes the animation.
 - `Restart` starts from an empty cube.
 - `Finish` jumps to the solved cube.

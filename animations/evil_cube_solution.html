@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Evil Cube Solution Animation</title>
+  <title>Cube Solution Animation</title>
   <style>
     :root {
       color-scheme: light;
@@ -89,7 +89,8 @@
       background: var(--panel);
     }
 
-    .buttons {
+    .buttons,
+    .puzzle-switch {
       display: flex;
       gap: 8px;
       align-items: center;
@@ -110,6 +111,12 @@
     button.primary {
       background: var(--accent);
       border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .puzzle-switch button.active {
+      background: #1f2933;
+      border-color: #1f2933;
       color: #ffffff;
     }
 
@@ -178,17 +185,21 @@
 <main>
   <header>
     <div>
-      <h1>Evil Cube Solution Animation</h1>
-      <div class="subtitle">Pieces slide into the solved 4x4x4 cube from physical bottom to top on checked clear paths.</div>
+      <h1 id="title">Evil Cube Solution Animation</h1>
+      <div class="subtitle" id="subtitle">Pieces slide into the solved 4x4x4 cube from physical bottom to top on checked clear paths.</div>
     </div>
     <div class="status" id="status">Preparing animation</div>
   </header>
 
-  <section class="stage" aria-label="Animated isometric Evil Cube solution">
+  <section class="stage" aria-label="Animated isometric cube solution">
     <canvas id="cubeCanvas"></canvas>
   </section>
 
   <footer class="controls">
+    <div class="puzzle-switch" aria-label="Choose puzzle">
+      <button class="active" data-puzzle="evil" type="button">Evil Cube</button>
+      <button data-puzzle="ultra" type="button">Ultra Cube</button>
+    </div>
     <div class="buttons">
       <button class="primary" id="playPause" type="button">Pause</button>
       <button id="restart" type="button">Restart</button>
@@ -212,34 +223,72 @@
   const HOLD_MS = 280;
   const FINISH_HOLD_MS = 1400;
 
-  // The saved solution uses z=0 as the physical top layer.
-  // The renderer converts it to height=3-z, so z=3 becomes the bottom layer.
-  const LAYERS = [
-    [
-      ["S4", "B3", "B3", "B1"],
-      ["S4", "B3", "B2", "B2"],
-      ["L1", "S3", "B2", "B2"],
-      ["L1", "L1", "B2", "R1"]
-    ],
-    [
-      ["B3", "B3", "B3", "B1"],
-      ["S4", "S4", "B1", "B1"],
-      ["S4", "S3", "S3", "B2"],
-      ["L1", "S3", "S2", "R1"]
-    ],
-    [
-      ["A2", "A2", "A2", "B1"],
-      ["A1", "A2", "S1", "B1"],
-      ["A1", "S2", "S3", "Z1"],
-      ["L1", "S2", "S2", "R1"]
-    ],
-    [
-      ["A2", "A2", "S1", "S1"],
-      ["A1", "S1", "S1", "Z1"],
-      ["A1", "A1", "Z1", "Z1"],
-      ["A1", "S2", "Z1", "R1"]
-    ]
-  ];
+  // The saved solutions use z=0 as the physical top layer.
+  // The renderer converts them to height=3-z, so z=3 becomes the bottom layer.
+  const PUZZLES = {
+    evil: {
+      title: "Evil Cube Solution Animation",
+      shortName: "Evil Cube",
+      solvedText: "Solved: all Evil Cube pieces placed from bottom to top.",
+      layers: [
+        [
+          ["S4", "B3", "B3", "B1"],
+          ["S4", "B3", "B2", "B2"],
+          ["L1", "S3", "B2", "B2"],
+          ["L1", "L1", "B2", "R1"]
+        ],
+        [
+          ["B3", "B3", "B3", "B1"],
+          ["S4", "S4", "B1", "B1"],
+          ["S4", "S3", "S3", "B2"],
+          ["L1", "S3", "S2", "R1"]
+        ],
+        [
+          ["A2", "A2", "A2", "B1"],
+          ["A1", "A2", "S1", "B1"],
+          ["A1", "S2", "S3", "Z1"],
+          ["L1", "S2", "S2", "R1"]
+        ],
+        [
+          ["A2", "A2", "S1", "S1"],
+          ["A1", "S1", "S1", "Z1"],
+          ["A1", "A1", "Z1", "Z1"],
+          ["A1", "S2", "Z1", "R1"]
+        ]
+      ]
+    },
+    ultra: {
+      title: "Ultra Cube Solution Animation",
+      shortName: "Ultra Cube",
+      solvedText: "Solved: all Ultra Cube pieces placed from bottom to top.",
+      layers: [
+        [
+          ["L7", "L7", "L11", "L9"],
+          ["L7", "Z1", "L11", "L11"],
+          ["L2", "Z1", "Z1", "L10"],
+          ["L2", "L2", "Z1", "R1"]
+        ],
+        [
+          ["L7", "L9", "L9", "L9"],
+          ["L5", "L8", "L11", "L9"],
+          ["L1", "L8", "Z1", "L10"],
+          ["L2", "L8", "L8", "R1"]
+        ],
+        [
+          ["L7", "L6", "L6", "L4"],
+          ["L5", "L6", "L11", "L10"],
+          ["L1", "L6", "L10", "L10"],
+          ["L2", "L8", "L3", "R1"]
+        ],
+        [
+          ["L5", "L6", "L4", "L4"],
+          ["L5", "L5", "L3", "L4"],
+          ["L1", "L1", "L3", "L4"],
+          ["L1", "L3", "L3", "R1"]
+        ]
+      ]
+    }
+  };
 
   const BASE_COLORS = {
     A: "#2f80ed",
@@ -260,6 +309,8 @@
 
   const canvas = document.getElementById("cubeCanvas");
   const ctx = canvas.getContext("2d");
+  const titleEl = document.getElementById("title");
+  const subtitleEl = document.getElementById("subtitle");
   const statusEl = document.getElementById("status");
   const legendEl = document.getElementById("legend");
   const playPauseButton = document.getElementById("playPause");
@@ -267,22 +318,50 @@
   const finishButton = document.getElementById("finish");
   const speedInput = document.getElementById("speed");
   const speedValue = document.getElementById("speedValue");
+  const puzzleButtons = Array.from(document.querySelectorAll("[data-puzzle]"));
 
-  const pieces = buildPieces();
-  const pieceOrder = planAssembly(pieces.slice().sort(compareBottomToTop));
-  const totalDuration = pieceOrder.length * (SLIDE_MS + HOLD_MS) + FINISH_HOLD_MS;
-
+  let currentPuzzleKey = "evil";
+  let currentPuzzle = PUZZLES[currentPuzzleKey];
+  let pieces = [];
+  let pieceOrder = [];
+  let totalDuration = 0;
   let playing = true;
   let startTime = performance.now();
   let pausedAt = 0;
   let speed = Number(speedInput.value);
 
-  function buildPieces() {
+  function loadPuzzle(key, autoplay) {
+    currentPuzzleKey = key;
+    currentPuzzle = PUZZLES[key];
+    pieces = buildPieces(currentPuzzle.layers);
+    pieceOrder = planAssembly(pieces.slice().sort(compareBottomToTop));
+    totalDuration = pieceOrder.length * (SLIDE_MS + HOLD_MS) + FINISH_HOLD_MS;
+    titleEl.textContent = currentPuzzle.title;
+    subtitleEl.textContent = `${currentPuzzle.shortName} pieces slide into the solved 4x4x4 cube from physical bottom to top on checked clear paths.`;
+    document.title = currentPuzzle.title;
+    puzzleButtons.forEach((button) => {
+      const active = button.dataset.puzzle === key;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+    buildLegend();
+    resetClock(Boolean(autoplay));
+    drawFrame(0);
+  }
+
+  function resetClock(autoplay) {
+    pausedAt = 0;
+    startTime = performance.now();
+    playing = autoplay;
+    playPauseButton.textContent = autoplay ? "Pause" : "Play";
+  }
+
+  function buildPieces(layers) {
     const byName = new Map();
     for (let layerZ = 0; layerZ < SIZE; layerZ += 1) {
       for (let y = 0; y < SIZE; y += 1) {
         for (let x = 0; x < SIZE; x += 1) {
-          const label = LAYERS[layerZ][y][x];
+          const label = layers[layerZ][y][x];
           const shape = label[0];
           const height = SIZE - 1 - layerZ;
           if (!byName.has(label)) {
@@ -643,7 +722,7 @@
 
   function updateStatus(state) {
     if (state.complete) {
-      statusEl.textContent = "Solved: all 12 pieces placed from bottom to top.";
+      statusEl.textContent = currentPuzzle.solvedText;
       if (playing) {
         playing = false;
         pausedAt = totalDuration;
@@ -672,10 +751,7 @@
   }
 
   function restart() {
-    pausedAt = 0;
-    startTime = performance.now();
-    playing = true;
-    playPauseButton.textContent = "Pause";
+    resetClock(true);
   }
 
   function finish() {
@@ -739,7 +815,9 @@
   }
 
   function buildLegend() {
-    for (const shape of Object.keys(BASE_COLORS).sort()) {
+    legendEl.textContent = "";
+    const shapes = Array.from(new Set(pieces.map((piece) => piece.shape))).sort();
+    for (const shape of shapes) {
       const item = document.createElement("span");
       item.className = "legend-item";
       const swatch = document.createElement("span");
@@ -759,6 +837,14 @@
   playPauseButton.addEventListener("click", togglePlay);
   restartButton.addEventListener("click", restart);
   finishButton.addEventListener("click", finish);
+  puzzleButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const key = button.dataset.puzzle;
+      if (key !== currentPuzzleKey) {
+        loadPuzzle(key, true);
+      }
+    });
+  });
   speedInput.addEventListener("input", () => {
     const currentElapsed = playing ? (performance.now() - startTime) * speed : pausedAt;
     speed = Number(speedInput.value);
@@ -770,8 +856,8 @@
     }
   });
 
-  buildLegend();
   layout();
+  loadPuzzle("evil", true);
   requestAnimationFrame(animate);
 })();
 </script>
