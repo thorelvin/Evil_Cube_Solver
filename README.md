@@ -271,14 +271,14 @@ These isometric SVGs are generated from the exact embedded coordinates in
 `solve_evil_cube.py`. They are meant as a quick visual guide when matching the
 printed solution labels to the physical pieces.
 
-| Piece | Image | Volume | Count in regular Evil Cube |
-| --- | --- | ---: | ---: |
-| `A` | <img src="assets/pieces/A.svg" alt="A piece" width="180"> | 6 | 2 |
-| `B` | <img src="assets/pieces/B.svg" alt="B piece" width="180"> | 6 | 3 |
-| `L` | <img src="assets/pieces/L.svg" alt="L piece" width="180"> | 5 | 1 |
-| `R` | <img src="assets/pieces/R.svg" alt="R piece" width="180"> | 4 | 1 |
-| `S` | <img src="assets/pieces/S.svg" alt="S piece" width="180"> | 5 | 4 |
-| `Z` | <img src="assets/pieces/Z.svg" alt="Z piece" width="180"> | 5 | 1 |
+| Piece | Image | Volume | Count in Evil Cube | Count in Ultra Cube |
+| --- | --- | ---: | ---: | ---: |
+| `A` | <img src="assets/pieces/A.svg" alt="A piece" width="180"> | 6 | 2 | 0 |
+| `B` | <img src="assets/pieces/B.svg" alt="B piece" width="180"> | 6 | 3 | 0 |
+| `L` | <img src="assets/pieces/L.svg" alt="L piece" width="180"> | 5 | 1 | 11 |
+| `R` | <img src="assets/pieces/R.svg" alt="R piece" width="180"> | 4 | 1 | 1 |
+| `S` | <img src="assets/pieces/S.svg" alt="S piece" width="180"> | 5 | 4 | 0 |
+| `Z` | <img src="assets/pieces/Z.svg" alt="Z piece" width="180"> | 5 | 1 | 1 |
 
 Regenerate the images after changing any shape coordinates:
 
