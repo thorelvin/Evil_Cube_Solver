@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -17,6 +18,8 @@ SIZE = 4
 FRAMES_PER_PIECE = 8
 FINAL_FRAMES = 10
 FRAME_DURATION_MS = 170
+DEFAULT_GIF_SIZE = 640
+GIF_PADDING_RATIO = 0.085
 
 LAYERS = [
     [
@@ -116,12 +119,15 @@ def main() -> None:
         default=Path("assets/animations/evil_cube_solution.gif"),
         help="GIF path to write.",
     )
-    parser.add_argument("--width", type=int, default=640)
-    parser.add_argument("--height", type=int, default=390)
+    parser.add_argument("--size", type=int, default=DEFAULT_GIF_SIZE, help="Square GIF size.")
+    parser.add_argument("--width", type=int, default=None, help="Override GIF width.")
+    parser.add_argument("--height", type=int, default=None, help="Override GIF height.")
     args = parser.parse_args()
 
     pieces = plan_assembly(sorted(build_pieces(), key=piece_sort_key))
-    frames = build_frames(pieces, args.width, args.height)
+    width = args.width or args.size
+    height = args.height or args.size
+    frames = build_frames(pieces, width, height)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     paletted = [
@@ -275,8 +281,14 @@ def draw_background(draw: ImageDraw.ImageDraw, width: int, height: int) -> None:
 
 
 def draw_bounding_box(draw: ImageDraw.ImageDraw, width: int, height: int) -> None:
-    bottom = [project(Cell(x, y, 0), width, height) for x, y in [(0, 0), (SIZE, 0), (SIZE, SIZE), (0, SIZE)]]
-    top = [project(Cell(x, y, SIZE), width, height) for x, y in [(0, 0), (SIZE, 0), (SIZE, SIZE), (0, SIZE)]]
+    bottom = [
+        project(Cell(x, y, 0), width, height)
+        for x, y in [(0, 0), (SIZE, 0), (SIZE, SIZE), (0, SIZE)]
+    ]
+    top = [
+        project(Cell(x, y, SIZE), width, height)
+        for x, y in [(0, 0), (SIZE, 0), (SIZE, SIZE), (0, SIZE)]
+    ]
     line = "#bcc7d1"
     draw.line(bottom + [bottom[0]], fill=line, width=2)
     draw.line(top + [top[0]], fill=line, width=2)
@@ -343,15 +355,42 @@ def offset_at(piece: Piece, t: float) -> Cell:
 
 
 def project(point: Cell, width: int, height: int) -> tuple[int, int]:
-    scale_base = min(width / 8.0, height / 6.4)
-    scale_x = scale_base * 0.78
-    scale_y = scale_base * 0.43
-    scale_z = scale_base * 0.83
-    origin_x = width * 0.5
-    origin_y = height * 0.65
+    scale_base, origin_x, origin_y = camera_for(width, height)
+    raw_x, raw_y = raw_project(point)
     return (
-        round(origin_x + (point.x - point.y) * scale_x),
-        round(origin_y + (point.x + point.y) * scale_y - point.z * scale_z),
+        round(origin_x + raw_x * scale_base),
+        round(origin_y + raw_y * scale_base),
+    )
+
+
+@lru_cache(maxsize=None)
+def camera_for(width: int, height: int) -> tuple[float, float, float]:
+    padding = min(width, height) * GIF_PADDING_RATIO
+    cube_points = [
+        Cell(x, y, z)
+        for x in (0, SIZE)
+        for y in (0, SIZE)
+        for z in (0, SIZE)
+    ]
+    raw_points = [raw_project(point) for point in cube_points]
+    min_x = min(point[0] for point in raw_points)
+    max_x = max(point[0] for point in raw_points)
+    min_y = min(point[1] for point in raw_points)
+    max_y = max(point[1] for point in raw_points)
+
+    scale_base = min(
+        (width - 2 * padding) / (max_x - min_x),
+        (height - 2 * padding) / (max_y - min_y),
+    )
+    origin_x = width * 0.5 - ((min_x + max_x) * scale_base / 2)
+    origin_y = height * 0.5 - ((min_y + max_y) * scale_base / 2)
+    return scale_base, origin_x, origin_y
+
+
+def raw_project(point: Cell) -> tuple[float, float]:
+    return (
+        (point.x - point.y) * 0.78,
+        (point.x + point.y) * 0.43 - point.z * 0.83,
     )
 
 
