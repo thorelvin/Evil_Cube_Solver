@@ -16,7 +16,7 @@ from PIL import Image, ImageDraw
 SIZE = 4
 FRAMES_PER_PIECE = 8
 FINAL_FRAMES = 10
-FRAME_DURATION_MS = 85
+FRAME_DURATION_MS = 170
 
 LAYERS = [
     [
