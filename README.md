@@ -25,6 +25,8 @@ The useful project files are:
 - `count_evil_cube_dlx.py` - fast labelled exact-cover counter using Algorithm X.
 - `count_evil_cube_solutions.py` - raw physical-solution counter that collapses
   identical pieces during search.
+- `count_ultra_cube_dlx.py` - fast labelled exact-cover counter for Ultra Cube.
+- `count_ultra_cube_solutions.py` - raw physical-solution counter for Ultra Cube.
 - `render_piece_svgs.py` - regenerates the isometric piece-identification
   images from the embedded shape data.
 - `assets/pieces/*.svg` - isometric images of the six brick types.
@@ -152,6 +154,13 @@ Run the slower raw counter:
 python .\count_evil_cube_solutions.py --progress-every 1 --heartbeat-seconds 60
 ```
 
+Count the Ultra Cube variant:
+
+```powershell
+python .\count_ultra_cube_dlx.py --progress-every 1000 --heartbeat-seconds 60
+python .\count_ultra_cube_solutions.py --progress-every 1 --heartbeat-seconds 60
+```
+
 Both counters write progress to stdout and also append to a progress file by
 default. That matters because complete counts can run for a long time; if a
 process is stopped or times out, the last partial result remains available in
@@ -218,6 +227,13 @@ The same result can be produced by the general solver:
 
 ```powershell
 python .\solve_evil_cube.py --puzzle ultra
+```
+
+Ultra counting commands:
+
+```powershell
+python .\count_ultra_cube_dlx.py --progress-every 1000 --heartbeat-seconds 60
+python .\count_ultra_cube_solutions.py --progress-every 1 --heartbeat-seconds 60
 ```
 
 One Ultra Cube solution is saved in `ultra_cube_solution.txt`:
@@ -354,11 +370,22 @@ Important: a partial labelled count from an unfinished run should not be divided
 by 288 and treated as a physical solution estimate. A stopped traversal can end
 in the middle of a duplicate-labelled family.
 
+For Ultra Cube, the labelled duplicate factor is even larger because it has
+eleven identical `L` pieces:
+
+```text
+11! = 39,916,800
+```
+
+That makes `count_ultra_cube_dlx.py` useful as a fast exact-cover traversal
+diagnostic, but `count_ultra_cube_solutions.py` is the script to use when you
+want physical Ultra Cube solution counts.
+
 ### Raw Counter
 
-`count_evil_cube_solutions.py` treats identical pieces as indistinguishable
-during the search. It is closer to the physical puzzle count, but it is slower.
-It reports:
+`count_evil_cube_solutions.py` and `count_ultra_cube_solutions.py` treat
+identical pieces as indistinguishable during the search. They are closer to the
+physical puzzle count, but slower. They report:
 
 - `raw_fixed_cube_solutions`: fixed cube orientation, identical pieces collapsed
 - `unique_up_to_cube_rotation`: raw count divided by the 24 rotations of the cube

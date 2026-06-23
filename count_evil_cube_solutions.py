@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from time import monotonic
 
-from solve_evil_cube import EVIL_INVENTORY, SHAPES, Coord, orientations
+from solve_evil_cube import EVIL_INVENTORY, PUZZLE_INVENTORIES, SHAPES, Coord, orientations
 
 
 SIZE = 4
@@ -87,11 +87,12 @@ def add(a: Coord, b: Coord) -> Coord:
     return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
 
 
-def generate_placements() -> tuple[list[Placement], dict[int, list[int]]]:
+def generate_placements(inventory: str = EVIL_INVENTORY) -> tuple[list[Placement], dict[int, list[int]]]:
     placements: list[Placement] = []
     by_cell: dict[int, list[int]] = defaultdict(list)
     seen: set[tuple[str, int]] = set()
-    for shape, cells in SHAPES.items():
+    for shape in sorted(set(inventory)):
+        cells = SHAPES[shape]
         for oriented in orientations(cells):
             max_x = max(x for x, _, _ in oriented)
             max_y = max(y for _, y, _ in oriented)
@@ -146,13 +147,14 @@ def canonical_solution(solution: list[Placement]) -> tuple[tuple[str, tuple[int,
 
 
 def count_raw_solutions(
+    inventory: str = EVIL_INVENTORY,
     progress_every: int = 0,
     heartbeat_seconds: float = 30.0,
     progress_file: str | None = None,
 ) -> int:
-    placements, by_cell = generate_placements()
-    shape_order = tuple(sorted(Counter(EVIL_INVENTORY)))
-    initial_counts = tuple(Counter(EVIL_INVENTORY)[shape] for shape in shape_order)
+    placements, by_cell = generate_placements(inventory)
+    shape_order = tuple(sorted(Counter(inventory)))
+    initial_counts = tuple(Counter(inventory)[shape] for shape in shape_order)
     shape_index = {shape: index for index, shape in enumerate(shape_order)}
     shape_volumes = tuple(len(SHAPES[shape]) for shape in shape_order)
     progress_count = 0
@@ -160,7 +162,7 @@ def count_raw_solutions(
     started = monotonic()
     last_heartbeat = started
     progress_print(
-        f"start counter=raw_fixed_cube inventory={EVIL_INVENTORY} "
+        f"start counter=raw_fixed_cube inventory={inventory} "
         f"placements={len(placements)} shapes={','.join(shape_order)} "
         f"progress_every={progress_every} heartbeat_seconds={heartbeat_seconds}",
         progress_file,
@@ -265,6 +267,16 @@ def count_raw_solutions(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--puzzle",
+        choices=sorted(PUZZLE_INVENTORIES),
+        default="evil",
+        help="Named puzzle inventory to count.",
+    )
+    parser.add_argument(
+        "--inventory",
+        help="Custom inventory string, overriding --puzzle.",
+    )
+    parser.add_argument(
         "--progress-every",
         type=int,
         default=1,
@@ -282,22 +294,25 @@ def main() -> None:
         help="Append progress reports to this text file. Use an empty string to disable.",
     )
     args = parser.parse_args()
+    inventory = args.inventory or PUZZLE_INVENTORIES[args.puzzle]
     progress_file = args.progress_file or None
     if progress_file:
         open(progress_file, "w", encoding="utf-8").close()
 
     raw = count_raw_solutions(
+        inventory=inventory,
         progress_every=args.progress_every,
         heartbeat_seconds=args.heartbeat_seconds,
         progress_file=progress_file,
     )
     unique = raw // len(ROTATIONS)
+    print(f"inventory={inventory}")
     print(f"raw_fixed_cube_solutions={raw}")
     print(f"unique_up_to_cube_rotation={unique}")
     print(f"cube_rotations={len(ROTATIONS)}")
     if progress_file:
         progress_print(
-            f"final raw_fixed_cube_solutions={raw} "
+            f"final inventory={inventory} raw_fixed_cube_solutions={raw} "
             f"unique_up_to_cube_rotation={unique} cube_rotations={len(ROTATIONS)}",
             progress_file,
         )

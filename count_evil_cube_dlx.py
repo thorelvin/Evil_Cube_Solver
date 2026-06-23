@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fast exact-cover count for the regular Evil Cube using Algorithm X."""
+"""Fast exact-cover count for Evil Cube family inventories using Algorithm X."""
 
 from __future__ import annotations
 
@@ -8,7 +8,14 @@ from collections import Counter
 from math import factorial
 from time import monotonic
 
-from solve_evil_cube import EVIL_INVENTORY, SHAPES, Coord, build_instances, orientations
+from solve_evil_cube import (
+    EVIL_INVENTORY,
+    PUZZLE_INVENTORIES,
+    SHAPES,
+    Coord,
+    build_instances,
+    orientations,
+)
 
 
 SIZE = 4
@@ -36,8 +43,8 @@ def add(a: Coord, b: Coord) -> Coord:
     return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
 
 
-def build_exact_cover() -> tuple[list[set[int]], list[set[int]], int]:
-    instances = build_instances(EVIL_INVENTORY)
+def build_exact_cover(inventory: str = EVIL_INVENTORY) -> tuple[list[set[int]], list[set[int]], int]:
+    instances = build_instances(inventory)
     piece_column = {instance: 64 + i for i, (instance, _) in enumerate(instances)}
     column_count = 64 + len(instances)
     columns = [set() for _ in range(column_count)]
@@ -67,18 +74,19 @@ def build_exact_cover() -> tuple[list[set[int]], list[set[int]], int]:
 
 
 def count_labelled(
+    inventory: str = EVIL_INVENTORY,
     progress_every: int = 0,
     heartbeat_seconds: float = 30.0,
     progress_file: str | None = None,
 ) -> int:
-    rows, columns, column_count = build_exact_cover()
+    rows, columns, column_count = build_exact_cover(inventory)
     active_columns = set(range(column_count))
     count = 0
     nodes = 0
     started = monotonic()
     last_heartbeat = started
     progress_print(
-        f"start counter=dlx_labelled inventory={EVIL_INVENTORY} "
+        f"start counter=dlx_labelled inventory={inventory} "
         f"rows={len(rows)} columns={column_count} "
         f"progress_every={progress_every} heartbeat_seconds={heartbeat_seconds}",
         progress_file,
@@ -149,8 +157,25 @@ def count_labelled(
     return count
 
 
+def duplicate_label_factor(inventory: str) -> int:
+    duplicate_factor = 1
+    for count in Counter(inventory).values():
+        duplicate_factor *= factorial(count)
+    return duplicate_factor
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--puzzle",
+        choices=sorted(PUZZLE_INVENTORIES),
+        default="evil",
+        help="Named puzzle inventory to count.",
+    )
+    parser.add_argument(
+        "--inventory",
+        help="Custom inventory string, overriding --puzzle.",
+    )
     parser.add_argument(
         "--progress-every",
         type=int,
@@ -169,26 +194,28 @@ def main() -> None:
         help="Append progress reports to this text file. Use an empty string to disable.",
     )
     args = parser.parse_args()
+    inventory = args.inventory or PUZZLE_INVENTORIES[args.puzzle]
     progress_file = args.progress_file or None
     if progress_file:
         open(progress_file, "w", encoding="utf-8").close()
 
     labelled = count_labelled(
+        inventory=inventory,
         progress_every=args.progress_every,
         heartbeat_seconds=args.heartbeat_seconds,
         progress_file=progress_file,
     )
-    duplicate_factor = 1
-    for count in Counter(EVIL_INVENTORY).values():
-        duplicate_factor *= factorial(count)
+    duplicate_factor = duplicate_label_factor(inventory)
     raw = labelled // duplicate_factor
+    print(f"inventory={inventory}")
     print(f"labelled_solutions={labelled}")
     print(f"duplicate_label_factor={duplicate_factor}")
     print(f"raw_fixed_cube_solutions={raw}")
     print(f"unique_up_to_cube_rotation={raw // 24}")
     if progress_file:
         progress_print(
-            f"final labelled_solutions={labelled} duplicate_label_factor={duplicate_factor} "
+            f"final inventory={inventory} labelled_solutions={labelled} "
+            f"duplicate_label_factor={duplicate_factor} "
             f"raw_fixed_cube_solutions={raw} unique_up_to_cube_rotation={raw // 24}",
             progress_file,
         )
