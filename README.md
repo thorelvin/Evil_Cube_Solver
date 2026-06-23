@@ -29,7 +29,10 @@ The useful project files are:
 - `count_ultra_cube_solutions.py` - raw physical-solution counter for Ultra Cube.
 - `render_piece_svgs.py` - regenerates the isometric piece-identification
   images from the embedded shape data.
+- `render_solution_gif.py` - regenerates the README animation GIF.
 - `assets/pieces/*.svg` - isometric images of the six brick types.
+- `assets/animations/evil_cube_solution.gif` - compact README preview of the
+  solution animation.
 - `animations/evil_cube_solution.html` - browser animation that assembles the
   Evil Cube solution one piece at a time.
 - `evil_cube_solution.txt` - one valid layer-by-layer solution.
@@ -47,8 +50,9 @@ Use Python 3.10 or newer. The scripts were verified with Python 3.10.6. Python
 3.10 matters because the code uses modern type-hint syntax such as
 `str | None`.
 
-There are no third-party dependencies. You do not need `pip install` for the
-solver, counters, or SVG renderer.
+There are no third-party dependencies for the solver, counters, SVG renderer,
+or browser animation. The optional `render_solution_gif.py` helper uses Pillow,
+but the generated GIF is already committed.
 
 ### Windows / PowerShell
 
@@ -216,9 +220,14 @@ Open `animations/evil_cube_solution.html` in a browser to watch the regular
 Evil Cube assemble itself one piece at a time. The animation is standalone:
 there is no build step, no Python server, and no internet connection required.
 
+![Evil Cube solution animation](assets/animations/evil_cube_solution.gif)
+
 The animation follows the physical layer convention used in the solution text:
 `z=3` is the bottom layer and `z=0` is the top layer. Pieces are ordered by the
 lowest physical layer they occupy, so the solved cube builds from bottom to top.
+For each step, the animation checks the already locked pieces and chooses a
+clear straight insertion path from a side face or from the top. This avoids the
+incoming piece passing through pieces that are already in place.
 
 Controls:
 
@@ -226,6 +235,13 @@ Controls:
 - `Restart` starts from an empty cube.
 - `Finish` jumps to the solved cube.
 - `Speed` changes the playback rate.
+
+To regenerate the README GIF, install Pillow and run:
+
+```powershell
+python -m pip install pillow
+python .\render_solution_gif.py
+```
 
 ## Ultra Cube
 

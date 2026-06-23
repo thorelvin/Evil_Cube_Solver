@@ -179,7 +179,7 @@
   <header>
     <div>
       <h1>Evil Cube Solution Animation</h1>
-      <div class="subtitle">Pieces slide into the solved 4x4x4 cube from physical bottom to top.</div>
+      <div class="subtitle">Pieces slide into the solved 4x4x4 cube from physical bottom to top on checked clear paths.</div>
     </div>
     <div class="status" id="status">Preparing animation</div>
   </header>
@@ -250,6 +250,14 @@
     Z: "#00a7a7"
   };
 
+  const ENTRY_DIRECTIONS = [
+    { id: "+x", label: "right face", axis: "x", sign: 1 },
+    { id: "-x", label: "left face", axis: "x", sign: -1 },
+    { id: "+y", label: "back face", axis: "y", sign: 1 },
+    { id: "-y", label: "front face", axis: "y", sign: -1 },
+    { id: "+z", label: "top", axis: "z", sign: 1 }
+  ];
+
   const canvas = document.getElementById("cubeCanvas");
   const ctx = canvas.getContext("2d");
   const statusEl = document.getElementById("status");
@@ -261,7 +269,7 @@
   const speedValue = document.getElementById("speedValue");
 
   const pieces = buildPieces();
-  const pieceOrder = pieces.slice().sort(compareBottomToTop);
+  const pieceOrder = planAssembly(pieces.slice().sort(compareBottomToTop));
   const totalDuration = pieceOrder.length * (SLIDE_MS + HOLD_MS) + FINISH_HOLD_MS;
 
   let playing = true;
@@ -290,7 +298,13 @@
       }
     }
     return Array.from(byName.values()).map((piece) => {
+      const xs = piece.cells.map((cell) => cell.x);
+      const ys = piece.cells.map((cell) => cell.y);
       const zs = piece.cells.map((cell) => cell.z);
+      piece.minX = Math.min(...xs);
+      piece.maxX = Math.max(...xs);
+      piece.minY = Math.min(...ys);
+      piece.maxY = Math.max(...ys);
       piece.minZ = Math.min(...zs);
       piece.maxZ = Math.max(...zs);
       piece.avgZ = zs.reduce((sum, z) => sum + z, 0) / zs.length;
@@ -311,6 +325,78 @@
       a.maxZ - b.maxZ ||
       a.label.localeCompare(b.label, undefined, { numeric: true })
     );
+  }
+
+  function planAssembly(orderedPieces) {
+    const lockedCells = [];
+    return orderedPieces.map((piece) => {
+      const entry = chooseEntry(piece, lockedCells);
+      if (!entry) {
+        throw new Error(`No clear entry path found for ${piece.label}`);
+      }
+      piece.entry = entry;
+      lockedCells.push(...piece.cells);
+      return piece;
+    });
+  }
+
+  function chooseEntry(piece, lockedCells) {
+    for (const direction of ENTRY_DIRECTIONS) {
+      if (canSlideFrom(piece, direction, lockedCells)) {
+        return {
+          ...direction,
+          offset: entryOffsetFor(piece, direction)
+        };
+      }
+    }
+    return null;
+  }
+
+  function canSlideFrom(piece, direction, lockedCells) {
+    for (const cell of piece.cells) {
+      for (const locked of lockedCells) {
+        if (wouldSweepThrough(cell, locked, direction)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  function wouldSweepThrough(cell, locked, direction) {
+    if (direction.id === "+x") {
+      return cell.y === locked.y && cell.z === locked.z && locked.x >= cell.x;
+    }
+    if (direction.id === "-x") {
+      return cell.y === locked.y && cell.z === locked.z && locked.x <= cell.x;
+    }
+    if (direction.id === "+y") {
+      return cell.x === locked.x && cell.z === locked.z && locked.y >= cell.y;
+    }
+    if (direction.id === "-y") {
+      return cell.x === locked.x && cell.z === locked.z && locked.y <= cell.y;
+    }
+    if (direction.id === "+z") {
+      return cell.x === locked.x && cell.y === locked.y && locked.z >= cell.z;
+    }
+    return true;
+  }
+
+  function entryOffsetFor(piece, direction) {
+    const margin = 2.25;
+    if (direction.id === "+x") {
+      return { x: SIZE + margin - piece.minX, y: 0, z: 0 };
+    }
+    if (direction.id === "-x") {
+      return { x: -piece.maxX - margin, y: 0, z: 0 };
+    }
+    if (direction.id === "+y") {
+      return { x: 0, y: SIZE + margin - piece.minY, z: 0 };
+    }
+    if (direction.id === "-y") {
+      return { x: 0, y: -piece.maxY - margin, z: 0 };
+    }
+    return { x: 0, y: 0, z: SIZE + margin - piece.minZ };
   }
 
   function layout() {
@@ -547,15 +633,11 @@
   }
 
   function entryOffset(piece, t) {
-    const fromRight = {
-      x: 5.8,
-      y: -3.6,
-      z: 0.65 + piece.minZ * 0.08
-    };
+    const from = piece.entry.offset;
     return {
-      x: fromRight.x * (1 - t),
-      y: fromRight.y * (1 - t),
-      z: fromRight.z * (1 - t)
+      x: from.x * (1 - t),
+      y: from.y * (1 - t),
+      z: from.z * (1 - t)
     };
   }
 
@@ -574,6 +656,7 @@
     statusEl.textContent = [
       `Step ${state.currentIndex + 1} of ${pieceOrder.length}: ${piece.label}`,
       `lowest physical layer ${physicalLayer}`,
+      `entry ${piece.entry.label}`,
       `${state.doneCount} pieces locked`
     ].join(" | ");
   }
