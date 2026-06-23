@@ -1,5 +1,7 @@
 # Evil Cube Solver
 
+![Evil Cube solution animation](assets/animations/evil_cube_solution.gif)
+
 This repository contains a small Python solver and counter for the regular
 Printables Evil Cube puzzle:
 
@@ -219,8 +221,6 @@ Piece labels identify a specific copy of a brick type. For example, `S1` to
 Open `animations/evil_cube_solution.html` in a browser to watch the regular
 Evil Cube assemble itself one piece at a time. The animation is standalone:
 there is no build step, no Python server, and no internet connection required.
-
-![Evil Cube solution animation](assets/animations/evil_cube_solution.gif)
 
 The animation follows the physical layer convention used in the solution text:
 `z=3` is the bottom layer and `z=0` is the top layer. Pieces are ordered by the
