@@ -30,6 +30,8 @@ The useful project files are:
 - `render_piece_svgs.py` - regenerates the isometric piece-identification
   images from the embedded shape data.
 - `assets/pieces/*.svg` - isometric images of the six brick types.
+- `animations/evil_cube_solution.html` - browser animation that assembles the
+  Evil Cube solution one piece at a time.
 - `evil_cube_solution.txt` - one valid layer-by-layer solution.
 - `ultra_cube_solution.txt` - one valid layer-by-layer Ultra Cube solution.
 - `REPORT.md` - notes from the exploratory counting runs.
@@ -142,6 +144,12 @@ Print the embedded shape definitions:
 python .\solve_evil_cube.py --show-shapes
 ```
 
+Open the solution animation:
+
+```powershell
+Start-Process .\animations\evil_cube_solution.html
+```
+
 Run the faster labelled counter with progress reporting:
 
 ```powershell
@@ -201,6 +209,23 @@ A1 S2 Z1 R1
 
 Piece labels identify a specific copy of a brick type. For example, `S1` to
 `S4` are the four `S` bricks, and `B1` to `B3` are the three `B` bricks.
+
+## Solution Animation
+
+Open `animations/evil_cube_solution.html` in a browser to watch the regular
+Evil Cube assemble itself one piece at a time. The animation is standalone:
+there is no build step, no Python server, and no internet connection required.
+
+The animation follows the physical layer convention used in the solution text:
+`z=3` is the bottom layer and `z=0` is the top layer. Pieces are ordered by the
+lowest physical layer they occupy, so the solved cube builds from bottom to top.
+
+Controls:
+
+- `Pause` / `Play` stops or resumes the animation.
+- `Restart` starts from an empty cube.
+- `Finish` jumps to the solved cube.
+- `Speed` changes the playback rate.
 
 ## Ultra Cube
 

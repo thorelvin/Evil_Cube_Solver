@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evil Cube Solution Animation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7f8;
+      --ink: #1f2933;
+      --muted: #5d6875;
+      --line: #d5dce3;
+      --panel: #ffffff;
+      --accent: #0f766e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    main {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 22px 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 2.4vw, 32px);
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .status {
+      min-width: min(380px, 48vw);
+      text-align: right;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .stage {
+      position: relative;
+      overflow: hidden;
+      min-height: 420px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      padding: 12px 22px 16px;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid #a9b4bf;
+      background: #ffffff;
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 9px 13px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(15, 118, 110, 0.25);
+      outline-offset: 2px;
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: min(420px, 100%);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    input[type="range"] {
+      width: min(260px, 50vw);
+      accent-color: var(--accent);
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.18);
+    }
+
+    @media (max-width: 760px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .status {
+        min-width: 0;
+        width: 100%;
+        text-align: left;
+      }
+
+      .controls {
+        align-items: stretch;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Evil Cube Solution Animation</h1>
+      <div class="subtitle">Pieces slide into the solved 4x4x4 cube from physical bottom to top.</div>
+    </div>
+    <div class="status" id="status">Preparing animation</div>
+  </header>
+
+  <section class="stage" aria-label="Animated isometric Evil Cube solution">
+    <canvas id="cubeCanvas"></canvas>
+  </section>
+
+  <footer class="controls">
+    <div class="buttons">
+      <button class="primary" id="playPause" type="button">Pause</button>
+      <button id="restart" type="button">Restart</button>
+      <button id="finish" type="button">Finish</button>
+    </div>
+    <label class="slider-group">
+      <span>Speed</span>
+      <input id="speed" type="range" min="0.5" max="2.5" step="0.25" value="1">
+      <span id="speedValue">1.00x</span>
+    </label>
+    <div class="legend" id="legend"></div>
+  </footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const SIZE = 4;
+  const SLIDE_MS = 1150;
+  const HOLD_MS = 280;
+  const FINISH_HOLD_MS = 1400;
+
+  // The saved solution uses z=0 as the physical top layer.
+  // The renderer converts it to height=3-z, so z=3 becomes the bottom layer.
+  const LAYERS = [
+    [
+      ["S4", "B3", "B3", "B1"],
+      ["S4", "B3", "B2", "B2"],
+      ["L1", "S3", "B2", "B2"],
+      ["L1", "L1", "B2", "R1"]
+    ],
+    [
+      ["B3", "B3", "B3", "B1"],
+      ["S4", "S4", "B1", "B1"],
+      ["S4", "S3", "S3", "B2"],
+      ["L1", "S3", "S2", "R1"]
+    ],
+    [
+      ["A2", "A2", "A2", "B1"],
+      ["A1", "A2", "S1", "B1"],
+      ["A1", "S2", "S3", "Z1"],
+      ["L1", "S2", "S2", "R1"]
+    ],
+    [
+      ["A2", "A2", "S1", "S1"],
+      ["A1", "S1", "S1", "Z1"],
+      ["A1", "A1", "Z1", "Z1"],
+      ["A1", "S2", "Z1", "R1"]
+    ]
+  ];
+
+  const BASE_COLORS = {
+    A: "#2f80ed",
+    B: "#27ae60",
+    L: "#eb5757",
+    R: "#f2c94c",
+    S: "#9b51e0",
+    Z: "#00a7a7"
+  };
+
+  const canvas = document.getElementById("cubeCanvas");
+  const ctx = canvas.getContext("2d");
+  const statusEl = document.getElementById("status");
+  const legendEl = document.getElementById("legend");
+  const playPauseButton = document.getElementById("playPause");
+  const restartButton = document.getElementById("restart");
+  const finishButton = document.getElementById("finish");
+  const speedInput = document.getElementById("speed");
+  const speedValue = document.getElementById("speedValue");
+
+  const pieces = buildPieces();
+  const pieceOrder = pieces.slice().sort(compareBottomToTop);
+  const totalDuration = pieceOrder.length * (SLIDE_MS + HOLD_MS) + FINISH_HOLD_MS;
+
+  let playing = true;
+  let startTime = performance.now();
+  let pausedAt = 0;
+  let speed = Number(speedInput.value);
+
+  function buildPieces() {
+    const byName = new Map();
+    for (let layerZ = 0; layerZ < SIZE; layerZ += 1) {
+      for (let y = 0; y < SIZE; y += 1) {
+        for (let x = 0; x < SIZE; x += 1) {
+          const label = LAYERS[layerZ][y][x];
+          const shape = label[0];
+          const height = SIZE - 1 - layerZ;
+          if (!byName.has(label)) {
+            byName.set(label, {
+              label,
+              shape,
+              cells: [],
+              color: colorFor(label)
+            });
+          }
+          byName.get(label).cells.push({ x, y, z: height });
+        }
+      }
+    }
+    return Array.from(byName.values()).map((piece) => {
+      const zs = piece.cells.map((cell) => cell.z);
+      piece.minZ = Math.min(...zs);
+      piece.maxZ = Math.max(...zs);
+      piece.avgZ = zs.reduce((sum, z) => sum + z, 0) / zs.length;
+      return piece;
+    });
+  }
+
+  function colorFor(label) {
+    const base = BASE_COLORS[label[0]];
+    const n = Number(label.slice(1)) || 1;
+    return shiftColor(base, (n - 1) * 0.07);
+  }
+
+  function compareBottomToTop(a, b) {
+    return (
+      a.minZ - b.minZ ||
+      a.avgZ - b.avgZ ||
+      a.maxZ - b.maxZ ||
+      a.label.localeCompare(b.label, undefined, { numeric: true })
+    );
+  }
+
+  function layout() {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+    canvas.height = Math.max(320, Math.floor(rect.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function project(point) {
+    const scale = getScale();
+    const origin = getOrigin();
+    return {
+      x: origin.x + (point.x - point.y) * scale.x,
+      y: origin.y + (point.x + point.y) * scale.y - point.z * scale.z
+    };
+  }
+
+  function getScale() {
+    const w = canvas.clientWidth || 960;
+    const h = canvas.clientHeight || 540;
+    const base = Math.min(w / 8.0, h / 6.4);
+    return {
+      x: base * 0.78,
+      y: base * 0.43,
+      z: base * 0.83
+    };
+  }
+
+  function getOrigin() {
+    const w = canvas.clientWidth || 960;
+    const h = canvas.clientHeight || 540;
+    return {
+      x: w * 0.5,
+      y: h * 0.62
+    };
+  }
+
+  function cubeCorners(cell) {
+    const x = cell.x;
+    const y = cell.y;
+    const z = cell.z;
+    return {
+      c000: { x, y, z },
+      c100: { x: x + 1, y, z },
+      c010: { x, y: y + 1, z },
+      c110: { x: x + 1, y: y + 1, z },
+      c001: { x, y, z: z + 1 },
+      c101: { x: x + 1, y, z: z + 1 },
+      c011: { x, y: y + 1, z: z + 1 },
+      c111: { x: x + 1, y: y + 1, z: z + 1 }
+    };
+  }
+
+  function drawCube(cell, color, visibleSet, alpha) {
+    const corners = cubeCorners(cell);
+    const faces = [
+      {
+        neighbor: keyFor(cell.x + 1, cell.y, cell.z),
+        fill: color,
+        points: [corners.c100, corners.c110, corners.c111, corners.c101]
+      },
+      {
+        neighbor: keyFor(cell.x, cell.y + 1, cell.z),
+        fill: mix(color, "#000000", 0.20),
+        points: [corners.c010, corners.c110, corners.c111, corners.c011]
+      },
+      {
+        neighbor: keyFor(cell.x, cell.y, cell.z + 1),
+        fill: mix(color, "#ffffff", 0.26),
+        points: [corners.c001, corners.c101, corners.c111, corners.c011]
+      }
+    ];
+
+    ctx.globalAlpha = alpha;
+    for (const face of faces) {
+      if (visibleSet.has(face.neighbor)) {
+        continue;
+      }
+      drawPolygon(face.points.map(project), face.fill, "#202833", 1.15);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawPolygon(points, fill, stroke, lineWidth) {
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i += 1) {
+      ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+  }
+
+  function drawFrame(elapsedMs) {
+    const w = canvas.clientWidth || 960;
+    const h = canvas.clientHeight || 540;
+    ctx.clearRect(0, 0, w, h);
+    drawBackground(w, h);
+
+    const state = animationState(elapsedMs);
+    const visiblePieces = [];
+    for (let i = 0; i < state.doneCount; i += 1) {
+      visiblePieces.push({ piece: pieceOrder[i], t: 1, active: false });
+    }
+    if (state.currentIndex < pieceOrder.length) {
+      visiblePieces.push({
+        piece: pieceOrder[state.currentIndex],
+        t: state.currentT,
+        active: true
+      });
+    }
+
+    drawBoundingBox();
+    drawPieces(visiblePieces);
+    updateStatus(state);
+  }
+
+  function drawBackground(w, h) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, "#ffffff");
+    gradient.addColorStop(1, "#eef3f5");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  function drawBoundingBox() {
+    const top = [
+      project({ x: 0, y: 0, z: SIZE }),
+      project({ x: SIZE, y: 0, z: SIZE }),
+      project({ x: SIZE, y: SIZE, z: SIZE }),
+      project({ x: 0, y: SIZE, z: SIZE })
+    ];
+    const bottom = [
+      project({ x: 0, y: 0, z: 0 }),
+      project({ x: SIZE, y: 0, z: 0 }),
+      project({ x: SIZE, y: SIZE, z: 0 }),
+      project({ x: 0, y: SIZE, z: 0 })
+    ];
+    ctx.save();
+    ctx.strokeStyle = "rgba(31,41,51,0.20)";
+    ctx.lineWidth = 1.4;
+    drawPath(bottom);
+    drawPath(top);
+    for (let i = 0; i < 4; i += 1) {
+      ctx.beginPath();
+      ctx.moveTo(bottom[i].x, bottom[i].y);
+      ctx.lineTo(top[i].x, top[i].y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawPath(points) {
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i += 1) {
+      ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  function drawPieces(items) {
+    const visibleSet = new Set();
+    const drawCells = [];
+    for (const item of items) {
+      const offset = entryOffset(item.piece, item.t);
+      for (const cell of item.piece.cells) {
+        const moved = {
+          x: cell.x + offset.x,
+          y: cell.y + offset.y,
+          z: cell.z + offset.z
+        };
+        if (item.t > 0.98) {
+          visibleSet.add(keyFor(cell.x, cell.y, cell.z));
+        }
+        drawCells.push({
+          cell: moved,
+          finalCell: cell,
+          piece: item.piece,
+          alpha: item.active ? 0.90 + 0.10 * item.t : 1
+        });
+      }
+    }
+
+    drawCells.sort((a, b) => {
+      const da = a.cell.x + a.cell.y + a.cell.z;
+      const db = b.cell.x + b.cell.y + b.cell.z;
+      return da - db || a.piece.label.localeCompare(b.piece.label, undefined, { numeric: true });
+    });
+
+    const approximateSet = new Set(drawCells.map((item) => keyFor(
+      Math.round(item.cell.x),
+      Math.round(item.cell.y),
+      Math.round(item.cell.z)
+    )));
+
+    for (const item of drawCells) {
+      drawCube(
+        item.cell,
+        item.piece.color,
+        item.alpha > 0.99 ? visibleSet : approximateSet,
+        item.alpha
+      );
+    }
+  }
+
+  function animationState(elapsedMs) {
+    const clamped = Math.max(0, Math.min(elapsedMs, totalDuration));
+    const stepMs = SLIDE_MS + HOLD_MS;
+    const doneCount = Math.min(pieceOrder.length, Math.floor(clamped / stepMs));
+    if (doneCount >= pieceOrder.length) {
+      return {
+        doneCount: pieceOrder.length,
+        currentIndex: pieceOrder.length,
+        currentT: 1,
+        complete: true
+      };
+    }
+    const inStep = clamped - doneCount * stepMs;
+    const slideT = Math.min(1, inStep / SLIDE_MS);
+    return {
+      doneCount,
+      currentIndex: doneCount,
+      currentT: easeOutCubic(slideT),
+      complete: false
+    };
+  }
+
+  function entryOffset(piece, t) {
+    const fromRight = {
+      x: 5.8,
+      y: -3.6,
+      z: 0.65 + piece.minZ * 0.08
+    };
+    return {
+      x: fromRight.x * (1 - t),
+      y: fromRight.y * (1 - t),
+      z: fromRight.z * (1 - t)
+    };
+  }
+
+  function updateStatus(state) {
+    if (state.complete) {
+      statusEl.textContent = "Solved: all 12 pieces placed from bottom to top.";
+      if (playing) {
+        playing = false;
+        pausedAt = totalDuration;
+        playPauseButton.textContent = "Play";
+      }
+      return;
+    }
+    const piece = pieceOrder[state.currentIndex];
+    const physicalLayer = piece.minZ + 1;
+    statusEl.textContent = [
+      `Step ${state.currentIndex + 1} of ${pieceOrder.length}: ${piece.label}`,
+      `lowest physical layer ${physicalLayer}`,
+      `${state.doneCount} pieces locked`
+    ].join(" | ");
+  }
+
+  function animate(now) {
+    if (playing) {
+      const elapsed = (now - startTime) * speed;
+      drawFrame(elapsed);
+    } else {
+      drawFrame(pausedAt);
+    }
+    requestAnimationFrame(animate);
+  }
+
+  function restart() {
+    pausedAt = 0;
+    startTime = performance.now();
+    playing = true;
+    playPauseButton.textContent = "Pause";
+  }
+
+  function finish() {
+    pausedAt = totalDuration;
+    playing = false;
+    playPauseButton.textContent = "Play";
+    drawFrame(pausedAt);
+  }
+
+  function togglePlay() {
+    if (playing) {
+      pausedAt = Math.min(totalDuration, (performance.now() - startTime) * speed);
+      playing = false;
+      playPauseButton.textContent = "Play";
+    } else {
+      if (pausedAt >= totalDuration) {
+        pausedAt = 0;
+      }
+      startTime = performance.now() - pausedAt / speed;
+      playing = true;
+      playPauseButton.textContent = "Pause";
+    }
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function keyFor(x, y, z) {
+    return `${x},${y},${z}`;
+  }
+
+  function hexToRgb(hex) {
+    const normalized = hex.replace("#", "");
+    return {
+      r: parseInt(normalized.slice(0, 2), 16),
+      g: parseInt(normalized.slice(2, 4), 16),
+      b: parseInt(normalized.slice(4, 6), 16)
+    };
+  }
+
+  function rgbToHex(rgb) {
+    return `#${[rgb.r, rgb.g, rgb.b].map((value) => {
+      return Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, "0");
+    }).join("")}`;
+  }
+
+  function mix(a, b, amount) {
+    const ca = hexToRgb(a);
+    const cb = hexToRgb(b);
+    return rgbToHex({
+      r: ca.r + (cb.r - ca.r) * amount,
+      g: ca.g + (cb.g - ca.g) * amount,
+      b: ca.b + (cb.b - ca.b) * amount
+    });
+  }
+
+  function shiftColor(hex, amount) {
+    const target = amount > 0.14 ? "#000000" : "#ffffff";
+    return mix(hex, target, Math.min(0.22, amount));
+  }
+
+  function buildLegend() {
+    for (const shape of Object.keys(BASE_COLORS).sort()) {
+      const item = document.createElement("span");
+      item.className = "legend-item";
+      const swatch = document.createElement("span");
+      swatch.className = "swatch";
+      swatch.style.background = BASE_COLORS[shape];
+      item.appendChild(swatch);
+      item.appendChild(document.createTextNode(shape));
+      legendEl.appendChild(item);
+    }
+  }
+
+  window.addEventListener("resize", () => {
+    layout();
+    drawFrame(playing ? (performance.now() - startTime) * speed : pausedAt);
+  });
+
+  playPauseButton.addEventListener("click", togglePlay);
+  restartButton.addEventListener("click", restart);
+  finishButton.addEventListener("click", finish);
+  speedInput.addEventListener("input", () => {
+    const currentElapsed = playing ? (performance.now() - startTime) * speed : pausedAt;
+    speed = Number(speedInput.value);
+    speedValue.textContent = `${speed.toFixed(2)}x`;
+    if (playing) {
+      startTime = performance.now() - currentElapsed / speed;
+    } else {
+      pausedAt = currentElapsed;
+    }
+  });
+
+  buildLegend();
+  layout();
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
