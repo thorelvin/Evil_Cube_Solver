@@ -37,6 +37,13 @@ SHAPES: dict[str, tuple[Coord, ...]] = {
 }
 
 EVIL_INVENTORY = "ZSSSSRLAABBB"
+FRIENDLY_INVENTORY = "ZSRLLLLAABBB"
+ULTRA_INVENTORY = "ZRLLLLLLLLLLL"
+PUZZLE_INVENTORIES = {
+    "evil": EVIL_INVENTORY,
+    "friendly": FRIENDLY_INVENTORY,
+    "ultra": ULTRA_INVENTORY,
+}
 FRIENDLY_REFERENCE_IDS = [
     ("Z", "17"),
     ("S", "469"),
@@ -354,6 +361,19 @@ def render_solution(solution: list[Placement], size: int = 4) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--puzzle",
+        choices=sorted(PUZZLE_INVENTORIES),
+        default="evil",
+        help="Named puzzle inventory to solve.",
+    )
+    parser.add_argument(
+        "--inventory",
+        help=(
+            "Custom inventory string, overriding --puzzle. "
+            "Example: ZRLLLLLLLLLLL for Ultra Cube."
+        ),
+    )
+    parser.add_argument(
         "--reference-dir",
         type=Path,
         default=Path("reference_bricks"),
@@ -373,6 +393,7 @@ def main() -> None:
     args = parser.parse_args()
 
     shapes = dict(SHAPES)
+    inventory = args.inventory or PUZZLE_INVENTORIES[args.puzzle]
     if args.validate_reference:
         if not args.reference_dir.exists():
             raise SystemExit(f"reference directory not found: {args.reference_dir}")
@@ -386,7 +407,7 @@ def main() -> None:
             raise SystemExit(f"reference shape mismatch: {', '.join(mismatches)}")
         print(f"validated {len(derived)} shape types from {args.reference_dir}")
 
-    missing = sorted(set(EVIL_INVENTORY) - set(shapes))
+    missing = sorted(set(inventory) - set(shapes))
     if missing:
         raise SystemExit(
             f"missing shapes {missing}; run from the workspace with {args.reference_dir}/ present"
@@ -395,9 +416,10 @@ def main() -> None:
     if args.show_shapes:
         for name in sorted(shapes):
             print(f"{name}: {shapes[name]} volume={len(shapes[name])}")
+        print(f"inventory={inventory}")
         print()
 
-    solutions = solve(shapes, max_solutions=args.max_solutions)
+    solutions = solve(shapes, inventory=inventory, max_solutions=args.max_solutions)
     if not solutions:
         raise SystemExit("no solution found")
     print(render_solution(solutions[0]))

@@ -21,6 +21,7 @@ so a complete solution exactly fills a 4x4x4 cube.
 The useful project files are:
 
 - `solve_evil_cube.py` - finds and prints a valid Evil Cube solution.
+- `solve_ultra_cube.py` - finds and prints a valid Ultra Cube solution.
 - `count_evil_cube_dlx.py` - fast labelled exact-cover counter using Algorithm X.
 - `count_evil_cube_solutions.py` - raw physical-solution counter that collapses
   identical pieces during search.
@@ -28,6 +29,7 @@ The useful project files are:
   images from the embedded shape data.
 - `assets/pieces/*.svg` - isometric images of the six brick types.
 - `evil_cube_solution.txt` - one valid layer-by-layer solution.
+- `ultra_cube_solution.txt` - one valid layer-by-layer Ultra Cube solution.
 - `REPORT.md` - notes from the exploratory counting runs.
 
 The original downloaded 3D model ZIP/PDF and web cache files are not included
@@ -112,6 +114,26 @@ Find one solution:
 python .\solve_evil_cube.py
 ```
 
+Solve the Ultra Cube variant:
+
+```powershell
+python .\solve_ultra_cube.py
+```
+
+The general solver can also run named presets:
+
+```powershell
+python .\solve_evil_cube.py --puzzle evil
+python .\solve_evil_cube.py --puzzle friendly
+python .\solve_evil_cube.py --puzzle ultra
+```
+
+Or a custom inventory string:
+
+```powershell
+python .\solve_evil_cube.py --inventory ZRLLLLLLLLLLL
+```
+
 Print the embedded shape definitions:
 
 ```powershell
@@ -170,6 +192,64 @@ A1 S2 Z1 R1
 
 Piece labels identify a specific copy of a brick type. For example, `S1` to
 `S4` are the four `S` bricks, and `B1` to `B3` are the three `B` bricks.
+
+## Ultra Cube
+
+The Ultra Cube variant is described on the Printables model page as one `Z`
+brick, one `R` brick, and eleven `L` bricks:
+
+```text
+Z R L L L L L L L L L L L
+```
+
+As an inventory string:
+
+```text
+ZRLLLLLLLLLLL
+```
+
+The dedicated command is:
+
+```powershell
+python .\solve_ultra_cube.py
+```
+
+The same result can be produced by the general solver:
+
+```powershell
+python .\solve_evil_cube.py --puzzle ultra
+```
+
+One Ultra Cube solution is saved in `ultra_cube_solution.txt`:
+
+```text
+z=0
+L7 L7 L11 L9
+L7 Z1 L11 L11
+L2 Z1 Z1 L10
+L2 L2 Z1 R1
+
+z=1
+L7 L9 L9 L9
+L5 L8 L11 L9
+L1 L8 Z1 L10
+L2 L8 L8 R1
+
+z=2
+L7 L6 L6 L4
+L5 L6 L11 L10
+L1 L6 L10 L10
+L2 L8 L3 R1
+
+z=3
+L5 L6 L4 L4
+L5 L5 L3 L4
+L1 L1 L3 L4
+L1 L3 L3 R1
+```
+
+Use the same physical reading convention as the Evil solution: `z=0` is the top
+layer and `z=3` is the bottom layer.
 
 ## Brick Model
 

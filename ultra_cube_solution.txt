@@ -1,0 +1,37 @@
+Ultra Cube Solution
+===================
+
+Inventory: ZRLLLLLLLLLLL
+
+Read layers top to bottom: z=0 through z=3.
+Rows are front to back; columns are left to right.
+
+z=0
+L7 L7 L11 L9
+L7 Z1 L11 L11
+L2 Z1 Z1 L10
+L2 L2 Z1 R1
+
+z=1
+L7 L9 L9 L9
+L5 L8 L11 L9
+L1 L8 Z1 L10
+L2 L8 L8 R1
+
+z=2
+L7 L6 L6 L4
+L5 L6 L11 L10
+L1 L6 L10 L10
+L2 L8 L3 R1
+
+z=3
+L5 L6 L4 L4
+L5 L5 L3 L4
+L1 L1 L3 L4
+L1 L3 L3 R1
+
+Piece Inventory
+---------------
+Z1: Z-brick
+R1: R-brick
+L1-L11: eleven L-bricks
