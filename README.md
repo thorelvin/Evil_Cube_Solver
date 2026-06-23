@@ -2,13 +2,27 @@
 
 ![Evil Cube solution animation](assets/animations/evil_cube_solution.gif)
 
-This repository contains a small Python solver and counter for the regular
-Printables Evil Cube puzzle:
+This repository contains a plain-Python solver, solution counter, and assembly
+animation for the
+[Printables Evil Cube puzzle](https://www.printables.com/model/1339793-evil-cube).
+It also includes the Ultra Cube variant from the same model page.
 
-https://www.printables.com/model/1339793-evil-cube
+The puzzles are modelled as 4x4x4 exact-cover polycube problems. The code stores
+only the derived unit-cube brick definitions needed for solving and counting;
+it does not redistribute the original 3D model files.
 
-The regular Evil Cube is modelled as a 4x4x4 exact-cover polycube puzzle with
-this inventory:
+## At A Glance
+
+| Puzzle | Inventory | Saved solution | Fixed-cube raw solutions | Unique up to cube rotation |
+| --- | --- | --- | ---: | ---: |
+| Evil Cube | `ZSSSSRLAABBB` | [evil_cube_solution.txt](evil_cube_solution.txt) | 3264 | 136 |
+| Ultra Cube | `ZRLLLLLLLLLLL` | [ultra_cube_solution.txt](ultra_cube_solution.txt) | 24 | 1 |
+
+Counts in this table are completed raw-counter results with identical pieces
+collapsed. See [Counting Solutions](#counting-solutions) for the labelled/raw
+distinction.
+
+The regular Evil Cube inventory is:
 
 ```text
 Z S S S S R L A A B B B
@@ -20,7 +34,7 @@ so a complete solution exactly fills a 4x4x4 cube.
 
 ## What Is Included
 
-The useful project files are:
+Main project files:
 
 - `solve_evil_cube.py` - finds and prints a valid Evil Cube solution.
 - `solve_ultra_cube.py` - finds and prints a valid Ultra Cube solution.
@@ -43,8 +57,7 @@ The useful project files are:
 
 The original downloaded 3D model ZIP/PDF and web cache files are not included
 in this repository. They belong to the Printables model page and can be
-downloaded there. The code stores only the derived unit-cube brick definitions
-needed to solve the puzzle.
+downloaded there.
 
 ## Python Setup
 
@@ -52,9 +65,9 @@ Use Python 3.10 or newer. The scripts were verified with Python 3.10.6. Python
 3.10 matters because the code uses modern type-hint syntax such as
 `str | None`.
 
-There are no third-party dependencies for the solver, counters, SVG renderer,
-or browser animation. The optional `render_solution_gif.py` helper uses Pillow,
-but the generated GIF is already committed.
+There are no third-party dependencies for solving, counting, SVG rendering, or
+running the browser animation. The optional `render_solution_gif.py` helper uses
+Pillow, but the generated GIF is already committed.
 
 ### Windows / PowerShell
 
@@ -150,7 +163,7 @@ Print the embedded shape definitions:
 python .\solve_evil_cube.py --show-shapes
 ```
 
-Open the solution animation:
+Open the browser animation:
 
 ```powershell
 Start-Process .\animations\evil_cube_solution.html
@@ -175,10 +188,10 @@ python .\count_ultra_cube_dlx.py --progress-every 1000 --heartbeat-seconds 60
 python .\count_ultra_cube_solutions.py --progress-every 1 --heartbeat-seconds 60
 ```
 
-Both counters write progress to stdout and also append to a progress file by
-default. That matters because complete counts can run for a long time; if a
-process is stopped or times out, the last partial result remains available in
-the progress file.
+Both counters write progress to stdout and append to a progress file by default.
+That is useful because complete counts can run for a long time; if a process is
+stopped or times out, the last partial result remains available in the progress
+file.
 
 ## The Found Solution
 
