@@ -1,2 +1,284 @@
-# Evil_Cube_Solver
-Python solver for the evil cube 3d puzzle
+# Evil Cube Solver
+
+This repository contains a small Python solver and counter for the regular
+Printables Evil Cube puzzle:
+
+https://www.printables.com/model/1339793-evil-cube
+
+The regular Evil Cube is modelled as a 4x4x4 exact-cover polycube puzzle with
+this inventory:
+
+```text
+Z S S S S R L A A B B B
+```
+
+That is one `Z`, four identical `S` bricks, one `R`, one `L`, two identical
+`A` bricks, and three identical `B` bricks. The total volume is 64 unit cubes,
+so a complete solution exactly fills a 4x4x4 cube.
+
+## What Is Included
+
+The useful project files are:
+
+- `solve_evil_cube.py` - finds and prints a valid Evil Cube solution.
+- `count_evil_cube_dlx.py` - fast labelled exact-cover counter using Algorithm X.
+- `count_evil_cube_solutions.py` - raw physical-solution counter that collapses
+  identical pieces during search.
+- `evil_cube_solution.txt` - one valid layer-by-layer solution.
+- `REPORT.md` - notes from the exploratory counting runs.
+
+The original downloaded 3D model ZIP/PDF and web cache files are not included
+in this repository. They belong to the Printables model page and can be
+downloaded there. The code stores only the derived unit-cube brick definitions
+needed to solve the puzzle.
+
+## Quick Start
+
+Use Python 3.10 or newer. The scripts use only the Python standard library.
+
+Find one solution:
+
+```powershell
+python .\solve_evil_cube.py
+```
+
+Print the embedded shape definitions:
+
+```powershell
+python .\solve_evil_cube.py --show-shapes
+```
+
+Run the faster labelled counter with progress reporting:
+
+```powershell
+python .\count_evil_cube_dlx.py --progress-every 1000 --heartbeat-seconds 60
+```
+
+Run the slower raw counter:
+
+```powershell
+python .\count_evil_cube_solutions.py --progress-every 1 --heartbeat-seconds 60
+```
+
+Both counters write progress to stdout and also append to a progress file by
+default. That matters because complete counts can run for a long time; if a
+process is stopped or times out, the last partial result remains available in
+the progress file.
+
+## The Found Solution
+
+The solution in `evil_cube_solution.txt` is printed as layers `z=0` through
+`z=3`. Read the layers bottom to top. Rows are front to back; columns are left
+to right.
+
+```text
+z=0
+S4 B3 B3 B1
+S4 B3 B2 B2
+L1 S3 B2 B2
+L1 L1 B2 R1
+
+z=1
+B3 B3 B3 B1
+S4 S4 B1 B1
+S4 S3 S3 B2
+L1 S3 S2 R1
+
+z=2
+A2 A2 A2 B1
+A1 A2 S1 B1
+A1 S2 S3 Z1
+L1 S2 S2 R1
+
+z=3
+A2 A2 S1 S1
+A1 S1 S1 Z1
+A1 A1 Z1 Z1
+A1 S2 Z1 R1
+```
+
+Piece labels identify a specific copy of a brick type. For example, `S1` to
+`S4` are the four `S` bricks, and `B1` to `B3` are the three `B` bricks.
+
+## Brick Model
+
+The solver represents each physical brick as a set of unit-cube coordinates.
+The embedded shapes are:
+
+```text
+A: 6 cubes
+B: 6 cubes
+L: 5 cubes
+R: 4 cubes
+S: 5 cubes
+Z: 5 cubes
+```
+
+The total inventory volume is:
+
+```text
+Z  = 1 * 5 = 5
+S  = 4 * 5 = 20
+R  = 1 * 4 = 4
+L  = 1 * 5 = 5
+A  = 2 * 6 = 12
+B  = 3 * 6 = 18
+total        64
+```
+
+The definitions in `solve_evil_cube.py` were derived from the author's public
+Friendly Cube reference OBJs and then embedded so the solver can run without
+large model files.
+
+If you have those reference OBJs in a local `reference_bricks/` directory, you
+can validate the embedded shapes:
+
+```powershell
+python .\solve_evil_cube.py --validate-reference
+```
+
+That validation step is optional and is not required to solve the regular Evil
+Cube.
+
+## How The Solver Works
+
+The basic solver is an exact-cover search.
+
+1. Build all piece instances from the inventory string `ZSSSSRLAABBB`.
+2. Generate every orientation of each brick under cube rotations.
+3. Translate each oriented brick through the 4x4x4 box.
+4. At each search step, choose the empty cell with the fewest legal placements.
+5. Place a compatible brick, recurse, and backtrack if the branch fails.
+
+This is a common exact-cover approach for polycube puzzles. The "fewest legal
+placements" heuristic is what makes the first solution appear quickly instead
+of wandering through a huge search tree.
+
+## Counting Solutions
+
+There are two counters because "number of solutions" can mean different things.
+
+### Labelled DLX Counter
+
+`count_evil_cube_dlx.py` uses Algorithm X over exact-cover columns:
+
+- 64 cube-cell columns
+- 12 piece-instance columns
+
+Internally, it treats the four `S` bricks, two `A` bricks, and three `B` bricks
+as individually labelled objects. This is fast and simple for Algorithm X, but
+it over-counts physical puzzle solutions.
+
+The duplicate labelling factor is:
+
+```text
+4! * 2! * 3! = 288
+```
+
+So a fully completed labelled count can be converted to a fixed-cube physical
+count by dividing by 288, assuming the labelled traversal has completed.
+
+Important: a partial labelled count from an unfinished run should not be divided
+by 288 and treated as a physical solution estimate. A stopped traversal can end
+in the middle of a duplicate-labelled family.
+
+### Raw Counter
+
+`count_evil_cube_solutions.py` treats identical pieces as indistinguishable
+during the search. It is closer to the physical puzzle count, but it is slower.
+It reports:
+
+- `raw_fixed_cube_solutions`: fixed cube orientation, identical pieces collapsed
+- `unique_up_to_cube_rotation`: raw count divided by the 24 rotations of the cube
+
+The division by 24 is valid for completed counts when no solved cube has a
+nontrivial rotational symmetry. For this irregular inventory, that is the
+expected case, but completed counting is still the stronger evidence.
+
+## Progress Reporting
+
+Both counters support progressive reporting:
+
+```powershell
+python .\count_evil_cube_dlx.py --progress-every 1000 --heartbeat-seconds 60
+python .\count_evil_cube_solutions.py --progress-every 1 --heartbeat-seconds 60
+```
+
+Useful options:
+
+- `--progress-every N` prints every N discovered completions.
+- `--heartbeat-seconds N` prints a status line even if no new completion was found.
+- `--progress-file PATH` appends the same messages to a text file.
+- Use `--progress-file ""` to disable progress-file output.
+
+Example heartbeat:
+
+```text
+heartbeat labelled_solutions=20172 nodes=16601797 depth=8 active_columns=26 elapsed_seconds=2940.0
+```
+
+That means the labelled DLX traversal had found 20,172 labelled completions,
+visited 16,601,797 search nodes, and had run for 2,940 seconds when the line was
+written.
+
+## Notes About The Designer's 120 Solutions
+
+The model page/designer references 120 solutions for the regular Evil Cube.
+That number is not directly comparable to a partial labelled DLX count.
+
+Possible counting conventions include:
+
+- labelled solutions, where identical pieces are treated as separate objects
+- fixed-cube physical solutions, where identical pieces are collapsed
+- unique solutions up to cube rotation
+- unique solutions up to cube rotation plus other presentation conventions
+
+The partial DLX run in this repository found more than 20,000 labelled
+completions before it was stopped. That does not contradict a smaller published
+physical count, because labelled completions include duplicate assignments of
+identical pieces and the traversal was not complete.
+
+The right comparison target is a completed physical count from
+`count_evil_cube_solutions.py`, or a completed labelled count divided by the
+duplicate factor after the whole labelled traversal finishes.
+
+## Files Produced By Long Runs
+
+The counters create progress logs by default:
+
+```text
+evil_cube_dlx_count_progress.txt
+evil_cube_raw_count_progress.txt
+```
+
+Ad hoc long runs may use custom names such as:
+
+```text
+evil_cube_dlx_10min_progress.txt
+evil_cube_dlx_1hour_progress.txt
+```
+
+These files are intentionally ignored by Git because they are run artifacts, not
+source code.
+
+## Limitations And Next Steps
+
+The current code is intentionally plain Python and dependency-free. That keeps
+it easy to inspect, but it also means the long-running counters are not yet as
+fast as they could be.
+
+Likely improvements:
+
+- Add symmetry-breaking constraints to avoid whole-cube rotational duplicates.
+- Add stronger duplicate handling to the DLX counter so partial runs can report
+  physical solution families, not just labelled completions.
+- Store canonical physical solutions during DLX counting for audit/debug runs.
+- Add resumable checkpoints for long counts.
+- Port the hot search loop to a faster implementation if a complete count is the
+  main goal.
+
+## License And Model Attribution
+
+This repository contains solver code and derived unit-cube descriptions. It does
+not redistribute the original Printables model files. Download the model from
+the original Printables page and follow the license terms shown there.

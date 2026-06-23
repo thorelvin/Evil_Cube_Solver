@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+
+# Local downloaded model/browser artifacts
+models/
+reference_bricks/
+tmp_3mf/
+*.zip
+*.pdf
+*.html
+*.js
+download-pack-link.json
+
+# Long-run output artifacts
+*progress*.txt
+*stdout*.txt
+*stderr*.txt
+evil_cube_dlx_count_progress.txt
+evil_cube_raw_count_progress.txt
+
+# Keep the compact handoff solution text tracked.
+!evil_cube_solution.txt

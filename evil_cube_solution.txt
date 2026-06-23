@@ -1,0 +1,39 @@
+Evil Cube Solution
+==================
+
+Read layers bottom to top: z=0 through z=3.
+Rows are front to back; columns are left to right.
+
+z=0
+S4 B3 B3 B1
+S4 B3 B2 B2
+L1 S3 B2 B2
+L1 L1 B2 R1
+
+z=1
+B3 B3 B3 B1
+S4 S4 B1 B1
+S4 S3 S3 B2
+L1 S3 S2 R1
+
+z=2
+A2 A2 A2 B1
+A1 A2 S1 B1
+A1 S2 S3 Z1
+L1 S2 S2 R1
+
+z=3
+A2 A2 S1 S1
+A1 S1 S1 Z1
+A1 A1 Z1 Z1
+A1 S2 Z1 R1
+
+Piece Inventory
+---------------
+Z1: Z-brick
+S1-S4: four S-bricks
+R1: R-brick
+L1: L-brick
+A1-A2: two A-bricks
+B1-B3: three B-bricks
+
