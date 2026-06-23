@@ -68,8 +68,9 @@ the progress file.
 ## The Found Solution
 
 The solution in `evil_cube_solution.txt` is printed as layers `z=0` through
-`z=3`. Read the layers bottom to top. Rows are front to back; columns are left
-to right.
+`z=3`. For physical assembly, read the layers top to bottom: `z=0` is the top
+layer and `z=3` is the bottom layer. Rows are front to back; columns are left to
+right.
 
 ```text
 z=0

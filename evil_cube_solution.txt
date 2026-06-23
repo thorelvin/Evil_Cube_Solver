@@ -1,7 +1,7 @@
 Evil Cube Solution
 ==================
 
-Read layers bottom to top: z=0 through z=3.
+Read layers top to bottom: z=0 through z=3.
 Rows are front to back; columns are left to right.
 
 z=0
@@ -36,4 +36,3 @@ R1: R-brick
 L1: L-brick
 A1-A2: two A-bricks
 B1-B3: three B-bricks
-

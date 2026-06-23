@@ -26,6 +26,10 @@ physical Evil Cube solutions.
 
 One valid solution was written to `evil_cube_solution.txt`.
 
+Assembly convention: use `z=0` as the top layer and continue downward through
+`z=3`. The solver's coordinate axis is arbitrary, but this is the orientation
+that matched the physical puzzle assembly.
+
 ```text
 z=0
 S4 B3 B3 B1
